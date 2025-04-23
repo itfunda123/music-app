@@ -7,14 +7,29 @@ function MusicPlayer() {
   const [currentPreview, setCurrentPreview] = useState(null);
 
   const searchSongs = async () => {
-    const res = await fetch(`https://api.deezer.com/search?q=${search}`);
-    const data = await res.json();
-    setResults(data.data || []);
+    const corsProxy = 'https://cors-anywhere.herokuapp.com/';
+    const baseURL = 'https://spotify23.p.rapidapi.com/search/';
+    const url = `${corsProxy}${baseURL}?q=${encodeURIComponent(search)}&type=tracks&limit=10`;
+
+    try {
+      const res = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'x-rapidapi-host': 'spotify23.p.rapidapi.com',
+          'x-rapidapi-key': 'YOUR_API_KEY_HERE', 
+        },
+      });
+
+      const data = await res.json();
+      setResults(data.tracks?.items || []);
+    } catch (err) {
+      console.error('Error fetching from Spotify API:', err);
+    }
   };
 
   return (
     <Container className="mt-5">
-      <h2>🎶 Stream Music Preview</h2>
+      <h2>🎶 Spotify Stream Preview</h2>
       <Form.Control
         type="text"
         placeholder="Search for a song..."
@@ -33,11 +48,11 @@ function MusicPlayer() {
             key={index}
             className="d-flex justify-content-between align-items-center"
           >
-            {track.title} - {track.artist.name}
+            {track.data?.name} - {track.data?.artists?.items[0]?.profile?.name}
             <Button
               variant="outline-success"
               size="sm"
-              onClick={() => setCurrentPreview(track.preview)}
+              onClick={() => setCurrentPreview(track.data?.preview_url)}
             >
               ▶️ Play
             </Button>
